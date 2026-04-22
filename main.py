@@ -21,7 +21,7 @@ app = FastAPI(
     - **Suppression de comptes** (avec validation)
     
     ### Documentation complète :
-    Consultez le guide d'utilisation détaillé : **[GUIDE_SWAGGER.md](https://github.com/michaelkengne7-png/bankAPI/blob/main/GUIDE_SWAGGER.md)**
+    Consultez le guide d'utilisation détaillé : **[GUIDE_SWAGGER.md](https://github.com/mike23700/bankAPI/blob/main/GUIDE_SWAGGER.md)**
     """,
     version="1.0.0",
     docs_url="/docs",
