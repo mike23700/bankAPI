@@ -134,7 +134,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     return compte
 
 # créer un compte
-@app.post("/comptes/", response_model=CompteResponse)
+@app.post("/comptes/", response_model=CompteResponse, status_code=201)
 def creer_compte(compte: CompteCreate):
     try:
         print("AVANT VERIFICATION EMAIL")
