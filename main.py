@@ -6,6 +6,10 @@ from datetime import datetime, timedelta
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import os
 
 app = FastAPI(
     title="API Banque",
@@ -27,6 +31,23 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc"
 )
+
+# Configuration CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Autoriser toutes les origines (utile pour le dev)
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Serve static files if directory exists
+os.makedirs("frontend", exist_ok=True)
+app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
+
+@app.get("/")
+def serve_frontend():
+    return FileResponse("frontend/index.html")
 
 # Configuration JWT
 SECRET_KEY = "votre-cle-secrete-tres-longue-et-complexe"
