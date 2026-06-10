@@ -10,6 +10,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import os
+from sqlalchemy.orm import Session
+import database
+import models
+
+# Créer les tables de base de données si elles n'existent pas
+database.Base.metadata.create_all(bind=database.engine)
 
 app = FastAPI(
     title="API Banque",
@@ -23,6 +29,7 @@ app = FastAPI(
     - **Recherche de comptes** par nom/email/ID
     - **Historique des transactions**
     - **Suppression de comptes** (avec validation)
+    - **Base de données persistante** (SQLite en local, PostgreSQL en production)
     
     ### Documentation complète :
     Consultez le guide d'utilisation détaillé : **[GUIDE_SWAGGER.md](https://github.com/mike23700/bankAPI/blob/main/GUIDE_SWAGGER.md)**
@@ -73,12 +80,20 @@ class Compte(BaseModel):
     date_creation: str
     code_hash: str  # mot de passe hashé
 
+    class Config:
+        orm_mode = True
+        from_attributes = True
+
 class CompteResponse(BaseModel):
     id: str
     nom: str
     email: EmailStr
     solde: float
     date_creation: str
+
+    class Config:
+        orm_mode = True
+        from_attributes = True
 
 class Transaction(BaseModel):
     id: str
@@ -88,6 +103,10 @@ class Transaction(BaseModel):
     description: str
     compte_source: Optional[str] = None
     compte_destination: Optional[str] = None
+
+    class Config:
+        orm_mode = True
+        from_attributes = True
 
 class DepotRequest(BaseModel):
     montant: float
@@ -113,10 +132,6 @@ class SuppressionCompteRequest(BaseModel):
     confirmation: bool
     mot_de_passe: str
 
-# "Base de données"
-comptes_db: List[Compte] = []
-transactions_db: List[Transaction] = []
-
 # Fonctions utilitaires
 def verifier_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
@@ -134,7 +149,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-async def get_current_user(token: str = Depends(oauth2_scheme)):
+async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(database.get_db)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Impossible de valider les identifiants",
@@ -149,31 +164,27 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     except JWTError:
         raise credentials_exception
     
-    compte = next((c for c in comptes_db if c.email == token_data.email), None)
+    compte = db.query(models.CompteORM).filter(models.CompteORM.email == token_data.email).first()
     if compte is None:
         raise credentials_exception
     return compte
 
 # créer un compte
 @app.post("/comptes/", response_model=CompteResponse, status_code=201)
-def creer_compte(compte: CompteCreate):
+def creer_compte(compte: CompteCreate, db: Session = Depends(database.get_db)):
     try:
-        print("AVANT VERIFICATION EMAIL")
         # Vérifier email unique
-        for c in comptes_db:
-            if c.email == compte.email:
-                raise HTTPException(status_code=400, detail="Email déjà utilisé")
+        compte_existant = db.query(models.CompteORM).filter(models.CompteORM.email == compte.email).first()
+        if compte_existant:
+            raise HTTPException(status_code=400, detail="Email déjà utilisé")
         
-        print("AVANT VALIDATION SOLDE")
         # Valider solde initial
         if compte.solde_initial < 0:
             raise HTTPException(status_code=400, detail="Le solde initial ne peut pas être négatif")
 
-        print("AVANT HASH")
         code_hash = get_password_hash(compte.code)
-        print("APRES HASH")
 
-        nouveau = Compte(
+        nouveau = models.CompteORM(
             id=str(uuid.uuid4())[:8],
             nom=compte.nom,
             email=compte.email,
@@ -182,12 +193,13 @@ def creer_compte(compte: CompteCreate):
             code_hash=code_hash
         )
 
-        print("AVANT AJOUT DB")
-        comptes_db.append(nouveau)
+        db.add(nouveau)
+        db.commit()
+        db.refresh(nouveau)
         
         # Créer transaction de dépôt initial si > 0
         if compte.solde_initial > 0:
-            transaction = Transaction(
+            transaction = models.TransactionORM(
                 id=str(uuid.uuid4())[:8],
                 type="depot",
                 montant=compte.solde_initial,
@@ -195,26 +207,22 @@ def creer_compte(compte: CompteCreate):
                 description="Dépôt initial",
                 compte_destination=nouveau.id
             )
-            transactions_db.append(transaction)
+            db.add(transaction)
+            db.commit()
         
-        print("AVANT RETOUR")
-        return CompteResponse(
-            id=nouveau.id,
-            nom=nouveau.nom,
-            email=nouveau.email,
-            solde=nouveau.solde,
-            date_creation=nouveau.date_creation
-        )
+        return nouveau
 
+    except HTTPException as he:
+        raise he
     except Exception as e:
         print("ERREUR DANS CREATION COMPTE:", str(e))
         raise HTTPException(status_code=500, detail=f"Erreur serveur: {str(e)}")
 
 # Connexion
 @app.post("/token", response_model=Token)
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
+async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(database.get_db)):
     # Chercher le compte par email (username dans form_data)
-    compte = next((c for c in comptes_db if c.email == form_data.username), None)
+    compte = db.query(models.CompteORM).filter(models.CompteORM.email == form_data.username).first()
     
     if not compte or not verifier_password(form_data.password, compte.code_hash):
         raise HTTPException(
@@ -231,29 +239,18 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
 # liste des comptes (admin seulement)
 @app.get("/comptes/", response_model=List[CompteResponse])
-def lister_comptes(current_user: Compte = Depends(get_current_user)):
-    return [CompteResponse(
-        id=c.id,
-        nom=c.nom,
-        email=c.email,
-        solde=c.solde,
-        date_creation=c.date_creation
-    ) for c in comptes_db]
+def lister_comptes(current_user: models.CompteORM = Depends(get_current_user), db: Session = Depends(database.get_db)):
+    comptes = db.query(models.CompteORM).all()
+    return comptes
 
 # Mon compte
 @app.get("/mon-compte", response_model=CompteResponse)
-def obtenir_mon_compte(current_user: Compte = Depends(get_current_user)):
-    return CompteResponse(
-        id=current_user.id,
-        nom=current_user.nom,
-        email=current_user.email,
-        solde=current_user.solde,
-        date_creation=current_user.date_creation
-    )
+def obtenir_mon_compte(current_user: models.CompteORM = Depends(get_current_user)):
+    return current_user
 
 # Dépôt
 @app.post("/depot")
-def depot(depot_request: DepotRequest, current_user: Compte = Depends(get_current_user)):
+def depot(depot_request: DepotRequest, current_user: models.CompteORM = Depends(get_current_user), db: Session = Depends(database.get_db)):
     if depot_request.montant <= 0:
         raise HTTPException(status_code=400, detail="Le montant doit être positif")
     
@@ -261,7 +258,7 @@ def depot(depot_request: DepotRequest, current_user: Compte = Depends(get_curren
     current_user.solde += depot_request.montant
     
     # Créer la transaction
-    transaction = Transaction(
+    transaction = models.TransactionORM(
         id=str(uuid.uuid4())[:8],
         type="depot",
         montant=depot_request.montant,
@@ -269,13 +266,14 @@ def depot(depot_request: DepotRequest, current_user: Compte = Depends(get_curren
         description=depot_request.description,
         compte_destination=current_user.id
     )
-    transactions_db.append(transaction)
+    db.add(transaction)
+    db.commit()
     
     return {"message": f"Dépôt de {depot_request.montant} FCFA effectué", "nouveau_solde": current_user.solde}
 
 # Retrait
 @app.post("/retrait")
-def retrait(retrait_request: RetraitRequest, current_user: Compte = Depends(get_current_user)):
+def retrait(retrait_request: RetraitRequest, current_user: models.CompteORM = Depends(get_current_user), db: Session = Depends(database.get_db)):
     if retrait_request.montant <= 0:
         raise HTTPException(status_code=400, detail="Le montant doit être positif")
     
@@ -286,7 +284,7 @@ def retrait(retrait_request: RetraitRequest, current_user: Compte = Depends(get_
     current_user.solde -= retrait_request.montant
     
     # Créer la transaction
-    transaction = Transaction(
+    transaction = models.TransactionORM(
         id=str(uuid.uuid4())[:8],
         type="retrait",
         montant=retrait_request.montant,
@@ -294,13 +292,14 @@ def retrait(retrait_request: RetraitRequest, current_user: Compte = Depends(get_
         description=retrait_request.description,
         compte_source=current_user.id
     )
-    transactions_db.append(transaction)
+    db.add(transaction)
+    db.commit()
     
     return {"message": f"Retrait de {retrait_request.montant} FCFA effectué", "nouveau_solde": current_user.solde}
 
 # Transfert
 @app.post("/transfert")
-def transfert(transfert_request: TransfertRequest, current_user: Compte = Depends(get_current_user)):
+def transfert(transfert_request: TransfertRequest, current_user: models.CompteORM = Depends(get_current_user), db: Session = Depends(database.get_db)):
     if transfert_request.montant <= 0:
         raise HTTPException(status_code=400, detail="Le montant doit être positif")
     
@@ -308,7 +307,7 @@ def transfert(transfert_request: TransfertRequest, current_user: Compte = Depend
         raise HTTPException(status_code=400, detail="Solde insuffisant")
     
     # Trouver le compte destination
-    compte_dest = next((c for c in comptes_db if c.id == transfert_request.compte_destination_id), None)
+    compte_dest = db.query(models.CompteORM).filter(models.CompteORM.id == transfert_request.compte_destination_id).first()
     if not compte_dest:
         raise HTTPException(status_code=404, detail="Compte destination non trouvé")
     
@@ -320,7 +319,7 @@ def transfert(transfert_request: TransfertRequest, current_user: Compte = Depend
     compte_dest.solde += transfert_request.montant
     
     # Créer les transactions
-    transaction_source = Transaction(
+    transaction_source = models.TransactionORM(
         id=str(uuid.uuid4())[:8],
         type="transfert_emis",
         montant=transfert_request.montant,
@@ -330,7 +329,7 @@ def transfert(transfert_request: TransfertRequest, current_user: Compte = Depend
         compte_destination=compte_dest.id
     )
     
-    transaction_dest = Transaction(
+    transaction_dest = models.TransactionORM(
         id=str(uuid.uuid4())[:8],
         type="transfert_recu",
         montant=transfert_request.montant,
@@ -340,7 +339,9 @@ def transfert(transfert_request: TransfertRequest, current_user: Compte = Depend
         compte_destination=compte_dest.id
     )
     
-    transactions_db.extend([transaction_source, transaction_dest])
+    db.add(transaction_source)
+    db.add(transaction_dest)
+    db.commit()
     
     return {
         "message": f"Transfert de {transfert_request.montant} FCFA vers {compte_dest.nom} effectué",
@@ -348,41 +349,30 @@ def transfert(transfert_request: TransfertRequest, current_user: Compte = Depend
     }
 
 # Recherche de comptes
-@app.get("/recherche")
-def rechercher_comptes(q: str, current_user: Compte = Depends(get_current_user)):
-    resultats = []
+@app.get("/recherche", response_model=List[CompteResponse])
+def rechercher_comptes(q: str, current_user: models.CompteORM = Depends(get_current_user), db: Session = Depends(database.get_db)):
     query = q.lower()
+    comptes = db.query(models.CompteORM).filter(
+        (models.CompteORM.nom.ilike(f"%{query}%")) |
+        (models.CompteORM.email.ilike(f"%{query}%")) |
+        (models.CompteORM.id == query)
+    ).all()
     
-    for compte in comptes_db:
-        if (query in compte.nom.lower() or 
-            query in compte.email.lower() or 
-            query == compte.id):
-            resultats.append(CompteResponse(
-                id=compte.id,
-                nom=compte.nom,
-                email=compte.email,
-                solde=compte.solde,
-                date_creation=compte.date_creation
-            ))
-    
-    return resultats
+    return comptes
 
 # Historique des transactions
-@app.get("/transactions")
-def obtenir_transactions(current_user: Compte = Depends(get_current_user)):
-    mes_transactions = [
-        t for t in transactions_db 
-        if t.compte_source == current_user.id or t.compte_destination == current_user.id
-    ]
-    
-    # Trier par date (plus récent en premier)
-    mes_transactions.sort(key=lambda x: x.date, reverse=True)
+@app.get("/transactions", response_model=List[Transaction])
+def obtenir_transactions(current_user: models.CompteORM = Depends(get_current_user), db: Session = Depends(database.get_db)):
+    mes_transactions = db.query(models.TransactionORM).filter(
+        (models.TransactionORM.compte_source == current_user.id) |
+        (models.TransactionORM.compte_destination == current_user.id)
+    ).order_by(models.TransactionORM.date.desc()).all()
     
     return mes_transactions
 
 # Suppression de compte
 @app.delete("/comptes/{compte_id}")
-def supprimer_compte(compte_id: str, suppression_request: SuppressionCompteRequest, current_user: Compte = Depends(get_current_user)):
+def supprimer_compte(compte_id: str, suppression_request: SuppressionCompteRequest, current_user: models.CompteORM = Depends(get_current_user), db: Session = Depends(database.get_db)):
     # Vérifier que l'utilisateur peut supprimer ce compte (soit le sien, soit admin)
     if compte_id != current_user.id:
         raise HTTPException(status_code=403, detail="Vous ne pouvez supprimer que votre propre compte")
@@ -403,12 +393,13 @@ def supprimer_compte(compte_id: str, suppression_request: SuppressionCompteReque
         )
     
     # Supprimer les transactions associées
-    transactions_db[:] = [
-        t for t in transactions_db 
-        if t.compte_source != compte_id and t.compte_destination != compte_id
-    ]
+    db.query(models.TransactionORM).filter(
+        (models.TransactionORM.compte_source == compte_id) | 
+        (models.TransactionORM.compte_destination == compte_id)
+    ).delete(synchronize_session=False)
     
     # Supprimer le compte
-    comptes_db[:] = [c for c in comptes_db if c.id != compte_id]
+    db.delete(current_user)
+    db.commit()
     
     return {"message": "Compte supprimé avec succès"}
