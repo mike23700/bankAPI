@@ -43,6 +43,8 @@ function switchNav(section) {
         loadTransactions(true);
     } else if (section === 'overview') {
         loadTransactions(false);
+    } else if (section === 'search') {
+        loadAllAccounts();
     }
 }
 
@@ -350,14 +352,57 @@ function renderTransactions(fullList = false) {
 // ==========================================
 // Search & Settings
 // ==========================================
+
+async function loadAllAccounts() {
+    const resultsContainer = document.getElementById('search-results');
+    resultsContainer.innerHTML = `
+        <div class="accounts-loading">
+            <i class='bx bx-loader-alt bx-spin'></i>
+            <span>Chargement des comptes...</span>
+        </div>
+    `;
+    try {
+        const res = await fetch(`${API_URL}/comptes/`, {
+            headers: { 'Authorization': `Bearer ${state.token}` }
+        });
+        if (!res.ok) throw new Error('Erreur lors du chargement des comptes');
+        const accounts = await res.json();
+        renderAccounts(accounts);
+    } catch (error) {
+        resultsContainer.innerHTML = `<div class="text-muted">Erreur: ${error.message}</div>`;
+    }
+}
+
+function renderAccounts(accounts) {
+    const resultsContainer = document.getElementById('search-results');
+    if (accounts.length === 0) {
+        resultsContainer.innerHTML = '<div class="text-muted">Aucun compte trouvé.</div>';
+        return;
+    }
+    resultsContainer.innerHTML = accounts.map(acc => `
+        <div class="account-card glass-panel">
+            <div class="account-avatar">${acc.nom.charAt(0).toUpperCase()}</div>
+            <h4><i class='bx bx-user-circle text-primary'></i> ${acc.nom}</h4>
+            <p><i class='bx bx-id-card'></i> ID: <code>${acc.id}</code></p>
+            <p><i class='bx bx-envelope'></i> ${acc.email}</p>
+            <p class="account-balance"><i class='bx bx-wallet'></i> ${formatCurrency(acc.solde)}</p>
+            ${acc.id !== state.user.id ? `
+                <button class="btn btn-primary btn-sm mt-2 w-full" onclick="prepareTransfer('${acc.id}')">
+                    <i class='bx bx-transfer'></i> Transférer vers ce compte
+                </button>
+            ` : '<div class="badge-own-account"><i class=\'bx bx-check-circle\'></i> Votre compte</div>'}
+        </div>
+    `).join('');
+}
+
 let searchTimeout;
 async function searchAccounts() {
     clearTimeout(searchTimeout);
-    const query = document.getElementById('search-query').value;
-    const resultsContainer = document.getElementById('search-results');
+    const query = document.getElementById('search-query').value.trim();
     
-    if (query.length < 2) {
-        resultsContainer.innerHTML = '';
+    // Si la recherche est vide, afficher tous les comptes
+    if (query.length === 0) {
+        loadAllAccounts();
         return;
     }
 
@@ -370,24 +415,7 @@ async function searchAccounts() {
             if (!res.ok) throw new Error('Erreur de recherche');
 
             const results = await res.json();
-            
-            if (results.length === 0) {
-                resultsContainer.innerHTML = '<div class="text-muted">Aucun compte trouvé.</div>';
-                return;
-            }
-
-            resultsContainer.innerHTML = results.map(acc => `
-                <div class="account-card glass-panel">
-                    <h4><i class='bx bx-user-circle text-primary'></i> ${acc.nom}</h4>
-                    <p><i class='bx bx-id-card'></i> ID: ${acc.id}</p>
-                    <p><i class='bx bx-envelope'></i> ${acc.email}</p>
-                    ${acc.id !== state.user.id ? `
-                        <button class="btn btn-primary btn-sm mt-2 w-full" onclick="prepareTransfer('${acc.id}')">
-                            Transférer vers ce compte
-                        </button>
-                    ` : '<div class="text-success mt-2 font-medium">Votre compte</div>'}
-                </div>
-            `).join('');
+            renderAccounts(results);
 
         } catch (error) {
             console.error(error);

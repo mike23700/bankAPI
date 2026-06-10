@@ -569,6 +569,78 @@ h1, h2, h3, h4 {
     font-size: 0.875rem;
     color: var(--text-muted);
     margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.account-card p code {
+    background: rgba(99, 102, 241, 0.15);
+    color: var(--primary);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-family: monospace;
+}
+
+.account-avatar {
+    width: 52px;
+    height: 52px;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.account-balance {
+    font-size: 1rem !important;
+    font-weight: 600;
+    color: var(--success) !important;
+    margin-top: 0.5rem;
+    padding: 0.4rem 0.75rem;
+    background: rgba(16, 185, 129, 0.08);
+    border-radius: 6px;
+    border: 1px solid rgba(16, 185, 129, 0.15);
+    display: inline-flex !important;
+    align-items: center;
+    gap: 0.4rem;
+    width: fit-content;
+}
+
+.badge-own-account {
+    margin-top: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--success);
+    background: rgba(16, 185, 129, 0.1);
+    padding: 0.4rem 0.75rem;
+    border-radius: 20px;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.accounts-loading {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 3rem;
+    color: var(--text-muted);
+    font-size: 1rem;
+}
+
+.accounts-loading i {
+    font-size: 1.5rem;
+    color: var(--primary);
 }
 
 /* Settings */
