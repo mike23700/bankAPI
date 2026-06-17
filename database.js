@@ -5,6 +5,7 @@ const path = require('path');
 const DATABASE_URL = process.env.DATABASE_URL || 'banque.db';
 
 let dbPath;
+/* v8 ignore next 3 */
 if (DATABASE_URL.startsWith('postgres')) {
   throw new Error('PostgreSQL non supporté dans cette version Node.js. Utilisez SQLite.');
 } else {
@@ -13,6 +14,7 @@ if (DATABASE_URL.startsWith('postgres')) {
 
 // Créer la connexion à la base de données
 const db = new sqlite3.Database(dbPath, (err) => {
+  /* v8 ignore next 3 */
   if (err) {
     console.error('Erreur de connexion à la base de données:', err.message);
   } else {

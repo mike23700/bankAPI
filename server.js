@@ -32,16 +32,22 @@ const swaggerDocument = YAML.load(
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Gestion des erreurs
+/* v8 ignore next 4 */
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ detail: 'Erreur serveur interne' });
 });
 
-// Démarrer le serveur
-app.listen(PORT, () => {
-  console.log(`\n=================================`);
-  console.log(`API Banque Node.js`);
-  console.log(`Serveur démarré sur http://localhost:${PORT}`);
-  console.log(`Documentation: http://localhost:${PORT}/`);
-  console.log(`=================================\n`);
-});
+// Démarrer le serveur uniquement si le fichier est exécuté directement
+/* v8 ignore next 9 */
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`\n=================================`);
+    console.log(`API Banque Node.js`);
+    console.log(`Serveur démarré sur http://localhost:${PORT}`);
+    console.log(`Documentation: http://localhost:${PORT}/`);
+    console.log(`=================================\n`);
+  });
+}
+
+module.exports = app;

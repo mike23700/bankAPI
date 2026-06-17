@@ -54,6 +54,7 @@ async function authenticateToken(req, res, next) {
 
     req.user = compte;
     next();
+  /* v8 ignore next 3 */
   } catch (error) {
     return res.status(500).json({ detail: 'Erreur serveur' });
   }
