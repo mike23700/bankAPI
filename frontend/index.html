@@ -1,267 +1,327 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mike's Banking Services</title>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Boxicons -->
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <!-- Styles -->
-    <link rel="stylesheet" href="/frontend/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mike's Banking Services</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <link rel="stylesheet" href="/frontend/style.css">
 </head>
 <body>
-    <!-- Notifications -->
-    <div id="notification-container" class="notification-container"></div>
 
-    <!-- Auth View -->
-    <div id="auth-view" class="view active-view">
-        <div class="glass-panel auth-panel">
-            <div class="auth-header">
-                <i class='bx bxs-bank'></i>
-                <h1>Mike's Banking Services</h1>
-                <p>L'avenir de vos finances commence ici.</p>
-            </div>
-            
-            <div class="auth-tabs">
-                <button class="tab-btn active" onclick="switchAuthTab('login')">Connexion</button>
-                <button class="tab-btn" onclick="switchAuthTab('register')">S'inscrire</button>
-            </div>
+  <!-- Notifications -->
+  <div id="notification-container" class="notification-container"></div>
 
-            <div id="login-form" class="auth-form active">
-                <div class="input-group">
-                    <i class='bx bx-envelope'></i>
-                    <input type="email" id="login-email" placeholder="Adresse email" required>
-                </div>
-                <div class="input-group">
-                    <i class='bx bx-lock-alt'></i>
-                    <input type="password" id="login-password" placeholder="Mot de passe" required>
-                </div>
-                <button class="btn btn-primary btn-block" onclick="login()">Se connecter</button>
-            </div>
-
-            <div id="register-form" class="auth-form">
-                <div class="input-group">
-                    <i class='bx bx-user'></i>
-                    <input type="text" id="register-name" placeholder="Nom complet" required>
-                </div>
-                <div class="input-group">
-                    <i class='bx bx-envelope'></i>
-                    <input type="email" id="register-email" placeholder="Adresse email" required>
-                </div>
-                <div class="input-group">
-                    <i class='bx bx-lock-alt'></i>
-                    <input type="password" id="register-password" placeholder="Mot de passe" required>
-                </div>
-                <div class="input-group">
-                    <i class='bx bx-wallet'></i>
-                    <input type="number" id="register-balance" placeholder="Solde initial (optionnel)" value="0" min="0">
-                </div>
-                <button class="btn btn-primary btn-block" onclick="register()">Créer mon compte</button>
-            </div>
+  <!-- ==================== AUTH VIEW ==================== -->
+  <div id="auth-view" class="view active-view">
+    <div class="glass-panel auth-panel">
+      <div class="auth-header">
+        <div class="logo-mark">
+          <i class='bx bxs-bank'></i>
         </div>
+        <h1>Mike's <span>Banking</span></h1>
+        <p><em>Vos finances, notre engagement.</em></p>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="tab-btn active" onclick="switchAuthTab('login')">Connexion</button>
+        <button class="tab-btn" onclick="switchAuthTab('register')">Ouvrir un compte</button>
+      </div>
+
+      <div id="login-form" class="auth-form active">
+        <div class="input-group">
+          <i class='bx bx-envelope'></i>
+          <input type="email" id="login-email" placeholder="Adresse e-mail" required>
+        </div>
+        <div class="input-group">
+          <i class='bx bx-lock-alt'></i>
+          <input type="password" id="login-password" placeholder="Mot de passe" required>
+        </div>
+        <button class="btn btn-primary btn-block" onclick="login()">
+          <i class='bx bx-log-in-circle'></i> Se connecter
+        </button>
+      </div>
+
+      <div id="register-form" class="auth-form">
+        <div class="input-group">
+          <i class='bx bx-user'></i>
+          <input type="text" id="register-name" placeholder="Nom complet" required>
+        </div>
+        <div class="input-group">
+          <i class='bx bx-envelope'></i>
+          <input type="email" id="register-email" placeholder="Adresse e-mail" required>
+        </div>
+        <div class="input-group">
+          <i class='bx bx-lock-alt'></i>
+          <input type="password" id="register-password" placeholder="Mot de passe" required>
+        </div>
+        <div class="input-group">
+          <i class='bx bx-wallet'></i>
+          <input type="number" id="register-balance" placeholder="Dépôt initial (optionnel)" value="0" min="0">
+        </div>
+        <button class="btn btn-primary btn-block" onclick="register()">
+          <i class='bx bx-user-plus'></i> Créer mon compte
+        </button>
+      </div>
     </div>
+  </div>
 
-    <!-- Dashboard View -->
-    <div id="dashboard-view" class="view">
-        <aside class="sidebar glass-panel">
-            <div class="sidebar-header">
-                <i class='bx bxs-bank'></i>
-                <h2>Mike's Banking Services</h2>
-            </div>
-            <nav class="sidebar-nav">
-                <button class="nav-btn active" onclick="switchNav('overview')"><i class='bx bx-grid-alt'></i> Vue d'ensemble</button>
-                <button class="nav-btn" onclick="switchNav('transactions')"><i class='bx bx-history'></i> Transactions</button>
-                <button class="nav-btn" onclick="switchNav('search')"><i class='bx bx-search'></i> Recherche</button>
-                <button class="nav-btn" onclick="switchNav('settings')"><i class='bx bx-cog'></i> Paramètres</button>
-            </nav>
-            <div class="sidebar-footer">
-                <button class="btn btn-logout" onclick="logout()"><i class='bx bx-log-out'></i> Déconnexion</button>
-            </div>
-        </aside>
+  <!-- ==================== DASHBOARD VIEW ==================== -->
+  <div id="dashboard-view" class="view">
 
-        <main class="main-content">
-            <header class="topbar glass-panel">
-                <div class="greeting">
-                    <h3>Bonjour, <span id="user-name">Utilisateur</span> 👋</h3>
-                    <p>Voici votre résumé financier aujourd'hui.</p>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <i class='bx bxs-bank'></i>
+        </div>
+        <h2>
+          Mike's Banking
+          <span>Services</span>
+        </h2>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Principal</div>
+        <button class="nav-btn active" onclick="switchNav('overview')">
+          <i class='bx bx-grid-alt'></i> Vue d'ensemble
+        </button>
+        <button class="nav-btn" onclick="switchNav('transactions')">
+          <i class='bx bx-history'></i> Historique
+        </button>
+
+        <div class="nav-section-label">Comptes</div>
+        <button class="nav-btn" onclick="switchNav('search')">
+          <i class='bx bx-search-alt-2'></i> Recherche
+        </button>
+        <button class="nav-btn" onclick="switchNav('settings')">
+          <i class='bx bx-cog'></i> Paramètres
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <div class="sidebar-avatar"><i class='bx bx-user'></i></div>
+          <div class="sidebar-user-info">
+            <strong id="sidebar-user-name">—</strong>
+            <p>Client</p>
+          </div>
+        </div>
+        <button class="btn btn-logout" onclick="logout()">
+          <i class='bx bx-log-out'></i> Déconnexion
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content">
+      <header class="topbar">
+        <div class="greeting">
+          <h3>Bonjour, <span id="user-name">—</span> 👋</h3>
+          <p>Voici votre tableau de bord financier.</p>
+        </div>
+        <div class="user-profile">
+          <i class='bx bxs-bell bell-icon'></i>
+          <div class="avatar"><i class='bx bx-user'></i></div>
+        </div>
+      </header>
+
+      <div class="content-area">
+
+        <!-- ---- OVERVIEW ---- -->
+        <section id="sec-overview" class="section-content active-section">
+
+          <div class="balance-card glass-panel">
+            <div class="balance-info">
+              <p class="balance-eyebrow">Solde disponible</p>
+              <h2 id="total-balance">0 FCFA</h2>
+              <div class="balance-sub" id="balance-account-id">— —</div>
+            </div>
+            <i class='bx bx-wallet-alt balance-icon'></i>
+          </div>
+
+          <div class="quick-actions">
+            <button class="action-card glass-panel" onclick="openModal('deposit-modal')">
+              <div class="icon-wrapper deposit"><i class='bx bx-down-arrow-alt'></i></div>
+              <span>Dépôt</span>
+            </button>
+            <button class="action-card glass-panel" onclick="openModal('withdraw-modal')">
+              <div class="icon-wrapper withdraw"><i class='bx bx-up-arrow-alt'></i></div>
+              <span>Retrait</span>
+            </button>
+            <button class="action-card glass-panel" onclick="openModal('transfer-modal')">
+              <div class="icon-wrapper transfer"><i class='bx bx-transfer'></i></div>
+              <span>Transfert</span>
+            </button>
+          </div>
+
+          <div class="recent-transactions glass-panel">
+            <div class="section-header">
+              <h3>Dernières transactions</h3>
+              <button class="btn-text" onclick="switchNavDirect('transactions')">Voir tout →</button>
+            </div>
+            <div class="transaction-list" id="recent-transactions-list">
+              <div class="text-muted" style="padding:1rem 0; font-size:0.85rem;">Chargement…</div>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ---- TRANSACTIONS ---- -->
+        <section id="sec-transactions" class="section-content">
+          <div class="glass-panel p-4">
+            <div class="section-header mb-4">
+              <h3>Historique complet</h3>
+              <button class="btn btn-secondary btn-sm" onclick="loadTransactions(true)">
+                <i class='bx bx-refresh'></i> Rafraîchir
+              </button>
+            </div>
+            <div class="transaction-list" id="all-transactions-list">
+              <div class="text-muted" style="font-size:0.85rem;">Chargement…</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ---- SEARCH ---- -->
+        <section id="sec-search" class="section-content">
+          <div class="glass-panel p-4">
+            <div class="section-header mb-4">
+              <h3>Rechercher un compte</h3>
+            </div>
+            <div class="search-bar mb-4">
+              <div class="input-group">
+                <i class='bx bx-search'></i>
+                <input type="text" id="search-query" placeholder="Nom, e-mail ou identifiant…" onkeyup="searchAccounts()">
+              </div>
+            </div>
+            <div class="accounts-grid" id="search-results">
+              <div class="text-muted" style="font-size:0.85rem;">Entrez un terme de recherche ou patientez…</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ---- SETTINGS ---- -->
+        <section id="sec-settings" class="section-content">
+          <div class="glass-panel p-4">
+            <div class="section-header mb-4">
+              <h3>Paramètres du compte</h3>
+            </div>
+            <div class="settings-card">
+              <div class="setting-item">
+                <div class="setting-info">
+                  <h4>Identifiant</h4>
+                  <p id="settings-id">—</p>
                 </div>
-                <div class="user-profile">
-                    <i class='bx bxs-bell bell-icon'></i>
-                    <div class="avatar"><i class='bx bx-user'></i></div>
+              </div>
+              <div class="setting-item">
+                <div class="setting-info">
+                  <h4>Adresse e-mail</h4>
+                  <p id="settings-email">—</p>
                 </div>
-            </header>
-
-            <div class="content-area">
-                <!-- Overview Section -->
-                <section id="sec-overview" class="section-content active-section">
-                    <div class="balance-card glass-panel gradient-bg">
-                        <div class="balance-info">
-                            <p>Solde Total</p>
-                            <h2 id="total-balance">0.00 FCFA</h2>
-                        </div>
-                        <i class='bx bx-wallet-alt balance-icon'></i>
-                    </div>
-
-                    <div class="quick-actions">
-                        <button class="action-card glass-panel" onclick="openModal('deposit-modal')">
-                            <div class="icon-wrapper deposit"><i class='bx bx-down-arrow-alt'></i></div>
-                            <span>Dépôt</span>
-                        </button>
-                        <button class="action-card glass-panel" onclick="openModal('withdraw-modal')">
-                            <div class="icon-wrapper withdraw"><i class='bx bx-up-arrow-alt'></i></div>
-                            <span>Retrait</span>
-                        </button>
-                        <button class="action-card glass-panel" onclick="openModal('transfer-modal')">
-                            <div class="icon-wrapper transfer"><i class='bx bx-transfer'></i></div>
-                            <span>Transfert</span>
-                        </button>
-                    </div>
-
-                    <div class="recent-transactions glass-panel">
-                        <div class="section-header">
-                            <h3>Dernières Transactions</h3>
-                            <button class="btn-text" onclick="switchNav('transactions')">Voir tout</button>
-                        </div>
-                        <div class="transaction-list" id="recent-transactions-list">
-                            <!-- Transactions will be loaded here -->
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Transactions Section -->
-                <section id="sec-transactions" class="section-content">
-                    <div class="glass-panel p-4 h-full">
-                        <div class="section-header mb-4">
-                            <h3>Historique Complet</h3>
-                            <button class="btn btn-secondary btn-sm" onclick="loadTransactions()"><i class='bx bx-refresh'></i> Rafraîchir</button>
-                        </div>
-                        <div class="transaction-list full-list" id="all-transactions-list">
-                            <!-- Transactions will be loaded here -->
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Search Section -->
-                <section id="sec-search" class="section-content">
-                    <div class="glass-panel p-4 h-full">
-                        <div class="section-header mb-4">
-                            <h3>Rechercher un compte</h3>
-                        </div>
-                        <div class="search-bar mb-4">
-                            <div class="input-group">
-                                <i class='bx bx-search'></i>
-                                <input type="text" id="search-query" placeholder="Nom, Email ou ID..." onkeyup="searchAccounts()">
-                            </div>
-                        </div>
-                        <div class="accounts-grid" id="search-results">
-                            <!-- Search results will be loaded here -->
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Settings Section -->
-                <section id="sec-settings" class="section-content">
-                    <div class="glass-panel p-4">
-                        <div class="section-header mb-4">
-                            <h3>Paramètres du compte</h3>
-                        </div>
-                        <div class="settings-card">
-                            <div class="setting-item">
-                                <div class="setting-info">
-                                    <h4>Identifiant Compte</h4>
-                                    <p id="settings-id">---</p>
-                                </div>
-                            </div>
-                            <div class="setting-item">
-                                <div class="setting-info">
-                                    <h4>Adresse Email</h4>
-                                    <p id="settings-email">---</p>
-                                </div>
-                            </div>
-                            <div class="setting-item danger-zone mt-4">
-                                <h4>Zone de Danger</h4>
-                                <p class="text-muted mb-2">Une fois que vous supprimez votre compte, il n'y a pas de retour en arrière possible.</p>
-                                <button class="btn btn-danger" onclick="openModal('delete-account-modal')">Supprimer le compte</button>
-                            </div>
-                        </div>
-                    </div>
-                </section>
+              </div>
+              <div class="setting-item danger-zone mt-4">
+                <div class="setting-info">
+                  <h4>Zone de danger</h4>
+                  <p class="text-muted mb-2">La suppression est irréversible. Le solde doit être à zéro.</p>
+                </div>
+                <div style="margin-top:1rem;">
+                  <button class="btn btn-danger btn-sm" onclick="openModal('delete-account-modal')">
+                    <i class='bx bx-trash'></i> Supprimer le compte
+                  </button>
+                </div>
+              </div>
             </div>
-        </main>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <div id="deposit-modal" class="modal">
+    <div class="modal-content glass-panel">
+      <span class="close" onclick="closeModal('deposit-modal')">&times;</span>
+      <h2>Faire un dépôt</h2>
+      <div class="form-group">
+        <label>Montant (FCFA)</label>
+        <input type="number" id="deposit-amount" min="1" placeholder="Ex : 50 000">
+      </div>
+      <div class="form-group">
+        <label>Libellé</label>
+        <input type="text" id="deposit-description" value="Dépôt">
+      </div>
+      <button class="btn btn-primary btn-block" onclick="handleDeposit()">
+        <i class='bx bx-check'></i> Confirmer le dépôt
+      </button>
     </div>
+  </div>
 
-    <!-- Modals -->
-    <div id="deposit-modal" class="modal">
-        <div class="modal-content glass-panel">
-            <span class="close" onclick="closeModal('deposit-modal')">&times;</span>
-            <h2>Faire un dépôt</h2>
-            <div class="form-group">
-                <label>Montant (FCFA)</label>
-                <input type="number" id="deposit-amount" min="1">
-            </div>
-            <div class="form-group">
-                <label>Description</label>
-                <input type="text" id="deposit-description" value="Dépôt">
-            </div>
-            <button class="btn btn-primary btn-block" onclick="handleDeposit()">Confirmer</button>
-        </div>
+  <div id="withdraw-modal" class="modal">
+    <div class="modal-content glass-panel">
+      <span class="close" onclick="closeModal('withdraw-modal')">&times;</span>
+      <h2>Faire un retrait</h2>
+      <div class="form-group">
+        <label>Montant (FCFA)</label>
+        <input type="number" id="withdraw-amount" min="1" placeholder="Ex : 20 000">
+      </div>
+      <div class="form-group">
+        <label>Libellé</label>
+        <input type="text" id="withdraw-description" value="Retrait">
+      </div>
+      <button class="btn btn-primary btn-block" onclick="handleWithdraw()">
+        <i class='bx bx-check'></i> Confirmer le retrait
+      </button>
     </div>
+  </div>
 
-    <div id="withdraw-modal" class="modal">
-        <div class="modal-content glass-panel">
-            <span class="close" onclick="closeModal('withdraw-modal')">&times;</span>
-            <h2>Faire un retrait</h2>
-            <div class="form-group">
-                <label>Montant (FCFA)</label>
-                <input type="number" id="withdraw-amount" min="1">
-            </div>
-            <div class="form-group">
-                <label>Description</label>
-                <input type="text" id="withdraw-description" value="Retrait">
-            </div>
-            <button class="btn btn-primary btn-block" onclick="handleWithdraw()">Confirmer</button>
-        </div>
+  <div id="transfer-modal" class="modal">
+    <div class="modal-content glass-panel">
+      <span class="close" onclick="closeModal('transfer-modal')">&times;</span>
+      <h2>Effectuer un transfert</h2>
+      <div class="form-group">
+        <label>Identifiant du destinataire</label>
+        <input type="text" id="transfer-dest" placeholder="ID du compte cible">
+      </div>
+      <div class="form-group">
+        <label>Montant (FCFA)</label>
+        <input type="number" id="transfer-amount" min="1" placeholder="Ex : 10 000">
+      </div>
+      <div class="form-group">
+        <label>Libellé</label>
+        <input type="text" id="transfer-description" value="Transfert">
+      </div>
+      <button class="btn btn-primary btn-block" onclick="handleTransfer()">
+        <i class='bx bx-transfer'></i> Confirmer le transfert
+      </button>
     </div>
+  </div>
 
-    <div id="transfer-modal" class="modal">
-        <div class="modal-content glass-panel">
-            <span class="close" onclick="closeModal('transfer-modal')">&times;</span>
-            <h2>Faire un transfert</h2>
-            <div class="form-group">
-                <label>ID Compte Destinataire</label>
-                <input type="text" id="transfer-dest">
-            </div>
-            <div class="form-group">
-                <label>Montant (FCFA)</label>
-                <input type="number" id="transfer-amount" min="1">
-            </div>
-            <div class="form-group">
-                <label>Description</label>
-                <input type="text" id="transfer-description" value="Transfert">
-            </div>
-            <button class="btn btn-primary btn-block" onclick="handleTransfer()">Confirmer</button>
-        </div>
+  <div id="delete-account-modal" class="modal">
+    <div class="modal-content glass-panel">
+      <span class="close" onclick="closeModal('delete-account-modal')">&times;</span>
+      <h2>Supprimer le compte</h2>
+      <p class="text-danger mb-4" style="margin-bottom:1.25rem;">
+        Cette action est définitive et irréversible.
+      </p>
+      <div class="form-group">
+        <label>Mot de passe</label>
+        <input type="password" id="delete-password" placeholder="Confirmez votre mot de passe">
+      </div>
+      <div class="form-group checkbox-group">
+        <input type="checkbox" id="delete-confirm">
+        <label for="delete-confirm" style="font-size:0.85rem; color:var(--cream-mid); text-transform:none; letter-spacing:0;">
+          Je comprends que cette action est définitive.
+        </label>
+      </div>
+      <button class="btn btn-danger btn-block" onclick="handleDeleteAccount()">
+        <i class='bx bx-trash'></i> Supprimer définitivement
+      </button>
     </div>
+  </div>
 
-    <div id="delete-account-modal" class="modal">
-        <div class="modal-content glass-panel">
-            <span class="close" onclick="closeModal('delete-account-modal')">&times;</span>
-            <h2>Supprimer le compte</h2>
-            <p class="text-danger mb-4">Attention: Le solde doit être à 0 pour pouvoir supprimer le compte.</p>
-            <div class="form-group">
-                <label>Mot de passe</label>
-                <input type="password" id="delete-password">
-            </div>
-            <div class="form-group checkbox-group">
-                <input type="checkbox" id="delete-confirm">
-                <label for="delete-confirm">Je confirme vouloir supprimer définitivement ce compte.</label>
-            </div>
-            <button class="btn btn-danger btn-block" onclick="handleDeleteAccount()">Supprimer définitivement</button>
-        </div>
-    </div>
-
-    <script src="/frontend/script.js"></script>
+  <script src="/frontend/script.js"></script>
 </body>
 </html>
