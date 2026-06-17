@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BankAPI - Banque en Ligne</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Boxicons -->
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <!-- Styles -->
+    <link rel="stylesheet" href="/frontend/style.css">
+</head>
+<body>
+    <!-- Notifications -->
+    <div id="notification-container" class="notification-container"></div>
+
+    <!-- Auth View -->
+    <div id="auth-view" class="view active-view">
+        <div class="glass-panel auth-panel">
+            <div class="auth-header">
+                <i class='bx bxs-bank'></i>
+                <h1>Nexus Bank</h1>
+                <p>L'avenir de vos finances commence ici.</p>
+            </div>
+            
+            <div class="auth-tabs">
+                <button class="tab-btn active" onclick="switchAuthTab('login')">Connexion</button>
+                <button class="tab-btn" onclick="switchAuthTab('register')">S'inscrire</button>
+            </div>
+
+            <div id="login-form" class="auth-form active">
+                <div class="input-group">
+                    <i class='bx bx-envelope'></i>
+                    <input type="email" id="login-email" placeholder="Adresse email" required>
+                </div>
+                <div class="input-group">
+                    <i class='bx bx-lock-alt'></i>
+                    <input type="password" id="login-password" placeholder="Mot de passe" required>
+                </div>
+                <button class="btn btn-primary btn-block" onclick="login()">Se connecter</button>
+            </div>
+
+            <div id="register-form" class="auth-form">
+                <div class="input-group">
+                    <i class='bx bx-user'></i>
+                    <input type="text" id="register-name" placeholder="Nom complet" required>
+                </div>
+                <div class="input-group">
+                    <i class='bx bx-envelope'></i>
+                    <input type="email" id="register-email" placeholder="Adresse email" required>
+                </div>
+                <div class="input-group">
+                    <i class='bx bx-lock-alt'></i>
+                    <input type="password" id="register-password" placeholder="Mot de passe" required>
+                </div>
+                <div class="input-group">
+                    <i class='bx bx-wallet'></i>
+                    <input type="number" id="register-balance" placeholder="Solde initial (optionnel)" value="0" min="0">
+                </div>
+                <button class="btn btn-primary btn-block" onclick="register()">Créer mon compte</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard View -->
+    <div id="dashboard-view" class="view">
+        <aside class="sidebar glass-panel">
+            <div class="sidebar-header">
+                <i class='bx bxs-bank'></i>
+                <h2>Nexus Bank</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="nav-btn active" onclick="switchNav('overview')"><i class='bx bx-grid-alt'></i> Vue d'ensemble</button>
+                <button class="nav-btn" onclick="switchNav('transactions')"><i class='bx bx-history'></i> Transactions</button>
+                <button class="nav-btn" onclick="switchNav('search')"><i class='bx bx-search'></i> Recherche</button>
+                <button class="nav-btn" onclick="switchNav('settings')"><i class='bx bx-cog'></i> Paramètres</button>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn btn-logout" onclick="logout()"><i class='bx bx-log-out'></i> Déconnexion</button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar glass-panel">
+                <div class="greeting">
+                    <h3>Bonjour, <span id="user-name">Utilisateur</span> 👋</h3>
+                    <p>Voici votre résumé financier aujourd'hui.</p>
+                </div>
+                <div class="user-profile">
+                    <div class="avatar"><i class='bx bx-user'></i></div>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <!-- Overview Section -->
+                <section id="sec-overview" class="section-content active-section">
+                    <div class="balance-card glass-panel gradient-bg">
+                        <div class="balance-info">
+                            <p>Solde Total</p>
+                            <h2 id="total-balance">0.00 FCFA</h2>
+                        </div>
+                        <i class='bx bx-wallet-alt balance-icon'></i>
+                    </div>
+
+                    <div class="quick-actions">
+                        <button class="action-card glass-panel" onclick="openModal('deposit-modal')">
+                            <div class="icon-wrapper deposit"><i class='bx bx-down-arrow-alt'></i></div>
+                            <span>Dépôt</span>
+                        </button>
+                        <button class="action-card glass-panel" onclick="openModal('withdraw-modal')">
+                            <div class="icon-wrapper withdraw"><i class='bx bx-up-arrow-alt'></i></div>
+                            <span>Retrait</span>
+                        </button>
+                        <button class="action-card glass-panel" onclick="openModal('transfer-modal')">
+                            <div class="icon-wrapper transfer"><i class='bx bx-transfer'></i></div>
+                            <span>Transfert</span>
+                        </button>
+                    </div>
+
+                    <div class="recent-transactions glass-panel">
+                        <div class="section-header">
+                            <h3>Dernières Transactions</h3>
+                            <button class="btn-text" onclick="switchNav('transactions')">Voir tout</button>
+                        </div>
+                        <div class="transaction-list" id="recent-transactions-list">
+                            <!-- Transactions will be loaded here -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Transactions Section -->
+                <section id="sec-transactions" class="section-content">
+                    <div class="glass-panel p-4 h-full">
+                        <div class="section-header mb-4">
+                            <h3>Historique Complet</h3>
+                            <button class="btn btn-secondary btn-sm" onclick="loadTransactions()"><i class='bx bx-refresh'></i> Rafraîchir</button>
+                        </div>
+                        <div class="transaction-list full-list" id="all-transactions-list">
+                            <!-- Transactions will be loaded here -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Search Section -->
+                <section id="sec-search" class="section-content">
+                    <div class="glass-panel p-4 h-full">
+                        <div class="section-header mb-4">
+                            <h3>Rechercher un compte</h3>
+                        </div>
+                        <div class="search-bar mb-4">
+                            <div class="input-group">
+                                <i class='bx bx-search'></i>
+                                <input type="text" id="search-query" placeholder="Nom, Email ou ID..." onkeyup="searchAccounts()">
+                            </div>
+                        </div>
+                        <div class="accounts-grid" id="search-results">
+                            <!-- Search results will be loaded here -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Settings Section -->
+                <section id="sec-settings" class="section-content">
+                    <div class="glass-panel p-4">
+                        <div class="section-header mb-4">
+                            <h3>Paramètres du compte</h3>
+                        </div>
+                        <div class="settings-card">
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <h4>Identifiant Compte</h4>
+                                    <p id="settings-id">---</p>
+                                </div>
+                            </div>
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <h4>Adresse Email</h4>
+                                    <p id="settings-email">---</p>
+                                </div>
+                            </div>
+                            <div class="setting-item danger-zone mt-4">
+                                <h4>Zone de Danger</h4>
+                                <p class="text-muted mb-2">Une fois que vous supprimez votre compte, il n'y a pas de retour en arrière possible.</p>
+                                <button class="btn btn-danger" onclick="openModal('delete-account-modal')">Supprimer le compte</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="deposit-modal" class="modal">
+        <div class="modal-content glass-panel">
+            <span class="close" onclick="closeModal('deposit-modal')">&times;</span>
+            <h2>Faire un dépôt</h2>
+            <div class="form-group">
+                <label>Montant (FCFA)</label>
+                <input type="number" id="deposit-amount" min="1">
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <input type="text" id="deposit-description" value="Dépôt">
+            </div>
+            <button class="btn btn-primary btn-block" onclick="handleDeposit()">Confirmer</button>
+        </div>
+    </div>
+
+    <div id="withdraw-modal" class="modal">
+        <div class="modal-content glass-panel">
+            <span class="close" onclick="closeModal('withdraw-modal')">&times;</span>
+            <h2>Faire un retrait</h2>
+            <div class="form-group">
+                <label>Montant (FCFA)</label>
+                <input type="number" id="withdraw-amount" min="1">
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <input type="text" id="withdraw-description" value="Retrait">
+            </div>
+            <button class="btn btn-primary btn-block" onclick="handleWithdraw()">Confirmer</button>
+        </div>
+    </div>
+
+    <div id="transfer-modal" class="modal">
+        <div class="modal-content glass-panel">
+            <span class="close" onclick="closeModal('transfer-modal')">&times;</span>
+            <h2>Faire un transfert</h2>
+            <div class="form-group">
+                <label>ID Compte Destinataire</label>
+                <input type="text" id="transfer-dest">
+            </div>
+            <div class="form-group">
+                <label>Montant (FCFA)</label>
+                <input type="number" id="transfer-amount" min="1">
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <input type="text" id="transfer-description" value="Transfert">
+            </div>
+            <button class="btn btn-primary btn-block" onclick="handleTransfer()">Confirmer</button>
+        </div>
+    </div>
+
+    <div id="delete-account-modal" class="modal">
+        <div class="modal-content glass-panel">
+            <span class="close" onclick="closeModal('delete-account-modal')">&times;</span>
+            <h2>Supprimer le compte</h2>
+            <p class="text-danger mb-4">Attention: Le solde doit être à 0 pour pouvoir supprimer le compte.</p>
+            <div class="form-group">
+                <label>Mot de passe</label>
+                <input type="password" id="delete-password">
+            </div>
+            <div class="form-group checkbox-group">
+                <input type="checkbox" id="delete-confirm">
+                <label for="delete-confirm">Je confirme vouloir supprimer définitivement ce compte.</label>
+            </div>
+            <button class="btn btn-danger btn-block" onclick="handleDeleteAccount()">Supprimer définitivement</button>
+        </div>
+    </div>
+
+    <script src="/frontend/script.js"></script>
+</body>
+</html>
