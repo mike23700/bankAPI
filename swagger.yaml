@@ -1,10 +1,10 @@
 openapi: 3.0.0
 info:
-  title: Banque API
+  title: Mike's Banking Services API
   description: API bancaire pour la gestion de comptes, transactions et transferts
   version: 1.0.0
   contact:
-    name: Nexus Bank
+    name: Mike's Banking Services
 
 servers:
   - url: http://localhost:3000
