@@ -1,0 +1,321 @@
+openapi: 3.0.0
+info:
+  title: Banque API
+  description: API bancaire pour la gestion de comptes, transactions et transferts
+  version: 1.0.0
+  contact:
+    name: Nexus Bank
+
+servers:
+  - url: http://localhost:3000
+    description: Serveur de développement
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Compte:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "a1b2c3d4"
+        nom:
+          type: string
+          example: "Jean Dupont"
+        email:
+          type: string
+          format: email
+          example: "jean@example.com"
+        solde:
+          type: number
+          example: 10000.00
+        date_creation:
+          type: string
+          format: date-time
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [depot, retrait, transfert_emis, transfert_recu]
+        montant:
+          type: number
+        date:
+          type: string
+          format: date-time
+        description:
+          type: string
+        compte_source:
+          type: string
+        compte_destination:
+          type: string
+
+    Error:
+      type: object
+      properties:
+        detail:
+          type: string
+
+security:
+  - bearerAuth: []
+
+paths:
+  /comptes:
+    post:
+      summary: Créer un nouveau compte bancaire
+      tags: [Comptes]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nom, email, code]
+              properties:
+                nom:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                code:
+                  type: string
+                  description: Mot de passe
+                solde_initial:
+                  type: number
+                  default: 0
+      responses:
+        '201':
+          description: Compte créé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Compte'
+        '400':
+          description: Erreur de validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    get:
+      summary: Lister tous les comptes (authentifié)
+      tags: [Comptes]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Liste des comptes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Compte'
+        '401':
+          description: Non authentifié
+
+  /token:
+    post:
+      summary: Obtenir un token d'authentification
+      tags: [Authentification]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                  description: Email du compte
+                password:
+                  type: string
+                  description: Mot de passe
+      responses:
+        '200':
+          description: Token généré avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  token_type:
+                    type: string
+                    example: bearer
+        '401':
+          description: Identifiants incorrects
+
+  /mon-compte:
+    get:
+      summary: Récupérer les infos de mon compte
+      tags: [Comptes]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Informations du compte
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Compte'
+
+  /depot:
+    post:
+      summary: Effectuer un dépôt
+      tags: [Transactions]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [montant]
+              properties:
+                montant:
+                  type: number
+                  minimum: 1
+                description:
+                  type: string
+                  default: "Dépôt"
+      responses:
+        '200':
+          description: Dépôt effectué
+        '400':
+          description: Montant invalide
+
+  /retrait:
+    post:
+      summary: Effectuer un retrait
+      tags: [Transactions]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [montant]
+              properties:
+                montant:
+                  type: number
+                  minimum: 1
+                description:
+                  type: string
+                  default: "Retrait"
+      responses:
+        '200':
+          description: Retrait effectué
+        '400':
+          description: Montant invalide ou solde insuffisant
+
+  /transfert:
+    post:
+      summary: Effectuer un transfert vers un autre compte
+      tags: [Transactions]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [montant, compte_destination_id]
+              properties:
+                montant:
+                  type: number
+                  minimum: 1
+                compte_destination_id:
+                  type: string
+                description:
+                  type: string
+                  default: "Transfert"
+      responses:
+        '200':
+          description: Transfert effectué
+        '400':
+          description: Erreur de validation
+        '404':
+          description: Compte destination non trouvé
+
+  /recherche:
+    get:
+      summary: Rechercher des comptes
+      tags: [Comptes]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+          description: Terme de recherche
+      responses:
+        '200':
+          description: Résultats de recherche
+
+  /transactions:
+    get:
+      summary: Historique des transactions
+      tags: [Transactions]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Liste des transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+
+  /comptes/{compte_id}:
+    delete:
+      summary: Supprimer un compte
+      tags: [Comptes]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: compte_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [confirmation, mot_de_passe]
+              properties:
+                confirmation:
+                  type: boolean
+                mot_de_passe:
+                  type: string
+      responses:
+        '200':
+          description: Compte supprimé
+        '400':
+          description: Solde non nul ou confirmation manquante
+        '401':
+          description: Mot de passe incorrect
+        '403':
+          description: Non autorisé
