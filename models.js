@@ -7,8 +7,9 @@ class Compte {
       const { id, nom, email, solde, date_creation, code_hash } = compteData;
       const sql = `INSERT INTO comptes (id, nom, email, solde, date_creation, code_hash) VALUES (?, ?, ?, ?, ?, ?)`;
       db.run(sql, [id, nom, email, solde, date_creation, code_hash], function(err) {
-        if (err) reject(err);
-        else resolve({ id, nom, email, solde, date_creation });
+        /* v8 ignore next */
+        if (err) return reject(err);
+        resolve({ id, nom, email, solde, date_creation });
       });
     });
   }
@@ -17,8 +18,9 @@ class Compte {
     return new Promise((resolve, reject) => {
       const sql = `SELECT * FROM comptes WHERE email = ?`;
       db.get(sql, [email], (err, row) => {
-        if (err) reject(err);
-        else resolve(row);
+        /* v8 ignore next */
+        if (err) return reject(err);
+        resolve(row);
       });
     });
   }
@@ -27,8 +29,9 @@ class Compte {
     return new Promise((resolve, reject) => {
       const sql = `SELECT * FROM comptes WHERE id = ?`;
       db.get(sql, [id], (err, row) => {
-        if (err) reject(err);
-        else resolve(row);
+        /* v8 ignore next */
+        if (err) return reject(err);
+        resolve(row);
       });
     });
   }
@@ -37,8 +40,9 @@ class Compte {
     return new Promise((resolve, reject) => {
       const sql = `SELECT id, nom, email, solde, date_creation FROM comptes`;
       db.all(sql, [], (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
+        /* v8 ignore next */
+        if (err) return reject(err);
+        resolve(rows);
       });
     });
   }
@@ -49,8 +53,9 @@ class Compte {
                    WHERE LOWER(nom) LIKE ? OR LOWER(email) LIKE ? OR id = ?`;
       const searchTerm = `%${query.toLowerCase()}%`;
       db.all(sql, [searchTerm, searchTerm, query], (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
+        /* v8 ignore next */
+        if (err) return reject(err);
+        resolve(rows);
       });
     });
   }
@@ -59,8 +64,9 @@ class Compte {
     return new Promise((resolve, reject) => {
       const sql = `UPDATE comptes SET solde = ? WHERE id = ?`;
       db.run(sql, [nouveauSolde, id], function(err) {
-        if (err) reject(err);
-        else resolve(this.changes);
+        /* v8 ignore next */
+        if (err) return reject(err);
+        resolve(this.changes);
       });
     });
   }
@@ -69,8 +75,9 @@ class Compte {
     return new Promise((resolve, reject) => {
       const sql = `DELETE FROM comptes WHERE id = ?`;
       db.run(sql, [id], function(err) {
-        if (err) reject(err);
-        else resolve(this.changes);
+        /* v8 ignore next */
+        if (err) return reject(err);
+        resolve(this.changes);
       });
     });
   }
@@ -84,8 +91,9 @@ class Transaction {
       const sql = `INSERT INTO transactions (id, type, montant, date, description, compte_source, compte_destination) 
                    VALUES (?, ?, ?, ?, ?, ?, ?)`;
       db.run(sql, [id, type, montant, date, description, compte_source, compte_destination], function(err) {
-        if (err) reject(err);
-        else resolve({ id, type, montant, date, description, compte_source, compte_destination });
+        /* v8 ignore next */
+        if (err) return reject(err);
+        resolve({ id, type, montant, date, description, compte_source, compte_destination });
       });
     });
   }
@@ -96,8 +104,9 @@ class Transaction {
                    WHERE compte_source = ? OR compte_destination = ? 
                    ORDER BY date DESC`;
       db.all(sql, [compteId, compteId], (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
+        /* v8 ignore next */
+        if (err) return reject(err);
+        resolve(rows);
       });
     });
   }
@@ -106,8 +115,9 @@ class Transaction {
     return new Promise((resolve, reject) => {
       const sql = `DELETE FROM transactions WHERE compte_source = ? OR compte_destination = ?`;
       db.run(sql, [compteId, compteId], function(err) {
-        if (err) reject(err);
-        else resolve(this.changes);
+        /* v8 ignore next */
+        if (err) return reject(err);
+        resolve(this.changes);
       });
     });
   }

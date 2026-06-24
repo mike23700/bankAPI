@@ -10,11 +10,12 @@
 </head>
 <body>
 
-  <!-- Notifications -->
-  <div id="notification-container" class="notification-container"></div>
 
   <!-- ==================== AUTH VIEW ==================== -->
   <div id="auth-view" class="view active-view">
+    <button class="theme-toggle auth-theme-toggle" onclick="toggleTheme()" aria-label="Changer le thème">
+      <i class='bx bx-moon'></i>
+    </button>
     <div class="glass-panel auth-panel">
       <div class="auth-header">
         <div class="logo-mark">
@@ -122,8 +123,12 @@
           <p>Voici votre tableau de bord financier.</p>
         </div>
         <div class="user-profile">
-          <i class='bx bxs-bell bell-icon'></i>
-          <div class="avatar"><i class='bx bx-user'></i></div>
+          <button class="theme-toggle" onclick="toggleTheme()" aria-label="Changer le thème">
+            <i class='bx bx-moon'></i>
+          </button>
+        <button class="avatar" onclick="switchNav('settings')">
+          <i class='bx bx-user'></i> 
+        </button>
         </div>
       </header>
 

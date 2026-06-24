@@ -12,8 +12,40 @@ let state = {
 // Init
 // ==========================================
 document.addEventListener('DOMContentLoaded', () => {
+  initTheme();
   if (state.token) checkAuth();
 });
+
+// ==========================================
+// Theme
+// ==========================================
+function initTheme() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+    document.querySelectorAll('.theme-toggle i').forEach(el => el.className = 'bx bx-sun');
+  } else {
+    document.documentElement.removeAttribute('data-theme');
+    document.querySelectorAll('.theme-toggle i').forEach(el => el.className = 'bx bx-moon');
+  }
+}
+
+function toggleTheme() {
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  if (isLight) {
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.setItem('theme', 'dark');
+    document.querySelectorAll('.theme-toggle i').forEach(el => {
+      el.className = 'bx bx-moon';
+    });
+  } else {
+    document.documentElement.setAttribute('data-theme', 'light');
+    localStorage.setItem('theme', 'light');
+    document.querySelectorAll('.theme-toggle i').forEach(el => {
+      el.className = 'bx bx-sun';
+    });
+  }
+}
 
 // ==========================================
 // UI & Navigation

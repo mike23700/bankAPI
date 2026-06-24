@@ -248,6 +248,29 @@ describe('API Banque - Tests Complets', () => {
       });
       expect(res.statusCode).toBe(401);
     });
+
+    it('Rejette un solde initial négatif', async () => {
+      const res = await request(app).post('/comptes/').send({
+        nom: 'Test Negatif',
+        email: 'negatif@test.com',
+        code: '123',
+        solde_initial: -100
+      });
+      expect(res.statusCode).toBe(400);
+    });
+
+    it('Rejette un transfert avec solde insuffisant', async () => {
+      const res = await request(app).post('/transfert').set('Authorization', `Bearer ${tokenUser1}`).send({
+        montant: 99999,
+        compte_destination_id: 'fake-id'
+      });
+      expect(res.statusCode).toBe(400);
+    });
+
+    it('Devrait retourner la page d\'accueil', async () => {
+      const res = await request(app).get('/');
+      expect(res.statusCode).toBe(200);
+    });
   });
 
 });
